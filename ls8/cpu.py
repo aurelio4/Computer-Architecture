@@ -44,6 +44,7 @@ class CPU:
                 else:
                     self.ram[address] = int(line, 2)
                     address += 1
+                    
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
