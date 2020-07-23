@@ -9,6 +9,9 @@ MUL = 0b10100010 # Multiply
 ADD = 0b10100000 # Add
 SUB = 0b10100001 # Subtract
 DIV = 0b10100011 # Divide
+POP = 0b01000110 # Pop
+PUS = 0b01000101 # Push
+SP = 7
 
 class CPU:
     """Main CPU class."""
@@ -17,7 +20,7 @@ class CPU:
         """Construct a new CPU."""
         self.ram = [0] * 256
         self.reg = [0] * 8
-        self.reg[7] = 0xF4
+        self.reg[SP] = 0xF4
 
         self.pc = 0
         self.running = True
@@ -85,22 +88,32 @@ class CPU:
         self.load()
 
         while self.running:
-            instruction_register = self.ram[self.pc]
-            reg_a = self.ram[self.pc + 1]
-            reg_b = self.ram[self.pc + 2]
+            instruction_register = self.ram_read(self.pc)
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
 
             if instruction_register == HLT:
                 self.running = False
                 self.pc += 1
             elif instruction_register == LDI:
-                self.reg[reg_a] = reg_b
+                self.reg[operand_a] = operand_b
                 self.pc += 3
             elif instruction_register == PRN:
-                print(self.reg[reg_a])
+                print(self.reg[operand_a])
                 self.pc += 2
             elif instruction_register == MUL:
-                self.reg[reg_a] *= self.reg[reg_b]
+                self.reg[operand_a] *= self.reg[operand_b]
                 self.pc += 3
+            elif instruction_register == PUS:
+                v = self.reg[operand_a]
+                self.reg[SP] -= 1
+                self.ram_write(self.reg[SP], v)
+                self.pc += 2
+            elif instruction_register == POP:
+                v = self.ram_read(self.reg[SP])
+                self.reg[SP] += 1
+                self.reg[operand_a] = v
+                self.pc += 2
             else:
                 print(f"Instruction '{instruction_register}'' at address '{self.pc}' is not recognized")
                 self.pc += 1
